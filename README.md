@@ -50,7 +50,7 @@ Watch the full demo of MockHire in action:
 | Backend/Auth      | Node.js, Express, JWT                         |
 | AI / NLP          | OpenAI API, D-ID API (for avatars)            |
 | Speech Processing | Speech-to-Text API (e.g., Google Cloud STT)   |
-| Database          | *(Specify—e.g., MongoDB, Firebase, etc.)*     |
+| Database          | MongoDb    
 
 ---
 
