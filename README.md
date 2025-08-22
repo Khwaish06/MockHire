@@ -1,5 +1,4 @@
 # 🧑‍💼 MockHire – AI-Powered Mock Interview Platform
-
 > Practice AI-powered mock interviews tailored to your role & resume. Get real-time feedback, boost your confidence, and ace your next interview!
 
 ---
@@ -47,10 +46,10 @@ Watch the full demo of MockHire in action:
 | Layer             | Technologies                                  |
 |-------------------|-----------------------------------------------|
 | Frontend          | React.js                                      |
-| Backend/Auth      | Node.js, Express, JWT                         |
-| AI / NLP          | OpenAI API, D-ID API (for avatars)            |
-| Speech Processing | Speech-to-Text API (e.g., Google Cloud STT)   |
-| Database          | MongoDb    
+| Backend/Auth      | Node.js, Express, JWT                        |
+| AI / NLP          | OpenAI API, D-ID API (for avatars)           |
+| Speech Processing | Speech-to-Text API (e.g., Google Cloud STT)  |
+| Database          | MongoDB                                       |
 
 ---
 
@@ -60,4 +59,37 @@ Watch the full demo of MockHire in action:
 ```bash
 git clone https://github.com/Khwaish06/MockHire.git
 cd MockHire
+```
+
+### 2️⃣ Install Dependencies
+```bash
+npm install
+```
+
+### 3️⃣ Setup Environment Variables
+Create a `.env` file in the root directory:
+```env
+OPENAI_API_KEY=your_openai_key
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+JWT_SECRET=your_jwt_secret
+DID_API_KEY=your_did_api_key
+# Optional if using MongoDB:
+MONGODB_URI=your_mongodb_connection_string
+```
+
+### 4️⃣ Run the App
+```bash
+npm start
+```
+
+---
+
+## 📜 License
+This project is licensed under the MIT License.
+
+---
+
+## 👨‍💻 Credits
+Built with ❤️ by **Khwaish Goel**
 
