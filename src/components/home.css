@@ -1,0 +1,66 @@
+/* src/components/home.css */
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  font-family: "Segoe UI", sans-serif;
+}
+
+.home-container {
+  height: 100vh;
+  width: 100vw;
+  background: radial-gradient(ellipse at bottom, #0d1a26 0%, #000000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6rem 2rem 2rem; /* Top padding to avoid navbar overlap */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 3rem 2rem;
+  width: 100%;
+  max-width: 600px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: white;
+  box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+  text-align: center;
+}
+
+.main-title {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(90deg, #00d2ff, #3a47d5);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.subtitle {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+  color: #c0c0c0;
+}
+
+.start-btn {
+  padding: 0.75rem 2rem;
+  border: none;
+  background: linear-gradient(to right, #00d2ff, #3a47d5);
+  color: white;
+  font-size: 1rem;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin: 0.5rem;
+}
+
+.start-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 15px #3a47d5;
+}
