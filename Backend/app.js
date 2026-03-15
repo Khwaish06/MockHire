@@ -7,6 +7,8 @@ console.log("✅ DID API Key:", process.env.DID_API_KEY);
 const userRoutes = require("./routes/user.js");
 const interviewRoutes = require("./routes/interview.js");
 const feedbackRoutes = require("./routes/feedback.js");
+const compilerRoutes = require("./routes/compiler.js");
+
 
 const app = express();
 
@@ -22,6 +24,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/user', userRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use("/api/compiler", compilerRoutes);
 
 // MongoDB connection and server start
 const PORT = process.env.PORT || 8000;

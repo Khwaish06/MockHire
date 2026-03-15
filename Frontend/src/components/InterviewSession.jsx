@@ -7,6 +7,8 @@ import "./interviewSession.css";
 
 const InterviewSession = () => {
   const { interviewId } = useParams();
+  const API = import.meta.env.VITE_BACKEND_URL;
+
   const [interview, setInterview] = useState(null);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [timer, setTimer] = useState(300);
@@ -23,35 +25,41 @@ const InterviewSession = () => {
 
   const token = localStorage.getItem("token");
 
-  // Fetch interview
   useEffect(() => {
     const fetchInterview = async () => {
       try {
-        const res = await axios.get(`/api/interview/${interviewId}`, {
-          headers: { Authorization: `Bearer ${token}` }
+        const res = await axios.get(`${API}/api/interview/${interviewId}`, {
+          headers: { Authorization: `Bearer ${token}` },
         });
         setInterview(res.data);
       } catch (err) {
-        console.error("Interview fetch error:", err);
+        console.error(err);
         setError("❌ Could not load interview.");
       }
     };
+
     fetchInterview();
   }, [interviewId]);
 
   useEffect(() => {
     if (!interview) return;
+
     const interval = setInterval(() => {
       setTimer((prev) => (prev > 0 ? prev - 1 : 0));
     }, 1000);
+
     return () => clearInterval(interval);
   }, [interview]);
 
   const startListening = () => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) return alert("Browser doesn't support speech recognition");
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition)
+      return alert("Browser doesn't support speech recognition");
 
     const recognition = new SpeechRecognition();
+
     recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.continuous = false;
@@ -60,7 +68,8 @@ const InterviewSession = () => {
       const text = e.results[0][0].transcript;
       setTranscript(text);
     };
-    recognition.onerror = (e) => console.error("Speech error:", e.error);
+
+    recognition.onerror = (e) => console.error(e);
     recognition.onend = () => setIsRecording(false);
 
     recognitionRef.current = recognition;
@@ -68,19 +77,21 @@ const InterviewSession = () => {
     setIsRecording(true);
   };
 
-  const stopListening = async () => {
+  const stopListening = () => {
     recognitionRef.current?.stop();
     setIsRecording(false);
-    await submitAnswer(transcript, false);
   };
 
   const submitAnswer = async (answer, isCoding) => {
     const question = interview?.questions?.[questionIndex]?.question;
-    if (!question) return;
+    if (!question || !answer) {
+      alert("Please answer the question first.");
+      return;
+    }
 
     try {
       const res = await axios.post(
-        `/api/interview/generate/${interviewId}/${questionIndex}`,
+        `${API}/api/feedback/generate/${interviewId}/${questionIndex}`,
         {
           question,
           answer,
@@ -88,37 +99,14 @@ const InterviewSession = () => {
           isCoding,
         },
         {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         }
       );
+
       setFeedback(res.data.feedback || "✅ Feedback received");
     } catch (err) {
-      console.error("Feedback error:", err);
+      console.error(err);
       setFeedback("❌ Feedback error");
-    }
-  };
-
-  const runCode = async () => {
-    const encodedCode = btoa(code); // Judge0 requires base64
-    try {
-      const res = await axios.post(
-        "https://judge0-ce.p.rapidapi.com/submissions?base64_encoded=true&wait=true",
-        {
-          language_id: getLanguageId(language),
-          source_code: encodedCode
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            "X-RapidAPI-Key": "b6ab2f68b4msha18fd1b7d2084dep15b1d5jsn5b792062e892", // ← Replace with real key
-            "X-RapidAPI-Host": "judge0-ce.p.rapidapi.com"
-          }
-        }
-      );
-      setOutput(atob(res.data.stdout || "") || "No Output");
-    } catch (err) {
-      console.error("Judge0 Error", err);
-      setOutput("❌ Error running code.");
     }
   };
 
@@ -127,9 +115,37 @@ const InterviewSession = () => {
       javascript: 63,
       python: 71,
       cpp: 54,
-      java: 62
+      java: 62,
     };
     return map[lang];
+  };
+
+  const runCode = async () => {
+    try {
+      const response = await axios.post(
+        "https://ce.judge0.com/submissions?base64_encoded=true&wait=true",
+        {
+          language_id: getLanguageId(language),
+          source_code: btoa(code),
+          stdin: "",
+        }
+      );
+
+      const result = response.data;
+
+      if (result.stdout) {
+        setOutput(atob(result.stdout));
+      } else if (result.stderr) {
+        setOutput(atob(result.stderr));
+      } else if (result.compile_output) {
+        setOutput(atob(result.compile_output));
+      } else {
+        setOutput(result.status?.description || "No output");
+      }
+    } catch (err) {
+      console.error("Judge0 Error:", err);
+      setOutput("❌ Submission failed.");
+    }
   };
 
   if (error) return <div className="error-box">{error}</div>;
@@ -148,8 +164,10 @@ const InterviewSession = () => {
         ) : (
           <p>Waiting for video...</p>
         )}
+
         <h2>Question {questionIndex + 1}</h2>
         <p>{currentQuestion}</p>
+
         <p className="timer">
           ⏱️ {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
         </p>
@@ -173,10 +191,14 @@ const InterviewSession = () => {
         <button
           onClick={async () => {
             try {
-              const res = await axios.get(`/api/interview/summary/${interviewId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-              });
-              alert("📄 Summary:\n" + JSON.stringify(res.data.summary, null, 2));
+              const res = await axios.get(
+                `${API}/api/feedback/summary/${interviewId}`,
+                {
+                  headers: { Authorization: `Bearer ${token}` },
+                }
+              );
+
+              alert("📄 Summary:\n" + JSON.stringify(res.data, null, 2));
             } catch {
               alert("❌ Error generating summary");
             }
@@ -190,6 +212,7 @@ const InterviewSession = () => {
         {!isCoding ? (
           <>
             <Webcam ref={webcamRef} className="webcam" />
+
             <div className="mic-controls">
               {!isRecording ? (
                 <button onClick={startListening}>🎤 Start Answering</button>
@@ -198,16 +221,27 @@ const InterviewSession = () => {
               )}
             </div>
 
+            <button
+              onClick={() => submitAnswer(transcript, false)}
+              disabled={!transcript}
+            >
+              🤖 Get Feedback
+            </button>
+
             <div className="feedback-box">
               <h3>Transcript</h3>
               <p>{transcript}</p>
+
               <h3>Feedback</h3>
               <p>{feedback}</p>
             </div>
           </>
         ) : (
           <>
-            <select value={language} onChange={(e) => setLanguage(e.target.value)}>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+            >
               <option value="javascript">JavaScript</option>
               <option value="python">Python</option>
               <option value="cpp">C++</option>
@@ -230,7 +264,9 @@ const InterviewSession = () => {
               <pre>{output}</pre>
             </div>
 
-            <button onClick={() => submitAnswer(code, true)}>✅ Submit</button>
+            <button onClick={() => submitAnswer(code, true)}>
+              🤖 Get Feedback
+            </button>
 
             <div className="feedback-box">
               <h3>💬 Feedback</h3>
