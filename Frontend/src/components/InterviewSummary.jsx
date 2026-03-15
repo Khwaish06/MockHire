@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
-import "./interviewsummary.css";
+import "./InterviewSummary.css";
 
 const InterviewSummary = () => {
 const API = import.meta.env.VITE_BACKEND_URL;
