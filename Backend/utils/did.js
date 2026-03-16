@@ -1,7 +1,8 @@
+
 const axios = require("axios");
 
-const AUTH =
-  "Basic a2FtYWwuMTk3OW1lZW51QGdtYWlsLmNvbQ:tNRDsY9E7kfPu6KcjreiQ";
+const EMAIL_BASE64 = "a2FtYWwuMTk3OW1lZW51QGdtYWlsLmNvbQ";
+const API_KEY = "tNRDsY9E7kfPu6KcjreiQ";
 
 const createTalkingVideo = async (text) => {
   const response = await axios.post(
@@ -16,9 +17,12 @@ const createTalkingVideo = async (text) => {
     },
     {
       headers: {
-        Authorization: AUTH,
         "Content-Type": "application/json",
         Accept: "application/json",
+      },
+      auth: {
+        username: EMAIL_BASE64,
+        password: API_KEY,
       },
     }
   );
@@ -30,9 +34,9 @@ const getVideoUrl = async (talkId) => {
   const response = await axios.get(
     `https://api.d-id.com/talks/${talkId}`,
     {
-      headers: {
-        Authorization: AUTH,
-        Accept: "application/json",
+      auth: {
+        username: EMAIL_BASE64,
+        password: API_KEY,
       },
     }
   );
@@ -41,3 +45,4 @@ const getVideoUrl = async (talkId) => {
 };
 
 module.exports = { createTalkingVideo, getVideoUrl };
+
