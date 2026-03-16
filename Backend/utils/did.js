@@ -18,7 +18,7 @@ const createTalkingVideo = async (text) => {
       },
       {
         headers: {
-          Authorization: DID_API_KEY,
+          Authorization: process.env.DID_API_KEY,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
@@ -46,7 +46,7 @@ const getVideoUrl = async (talkId) => {
         `https://api.d-id.com/talks/${talkId}`,
         {
           headers: {
-            Authorization:  DID_API_KEY,
+            Authorization:process.env.DID_API_KEY,
             Accept: "application/json",
           },
         }
