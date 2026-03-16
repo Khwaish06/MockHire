@@ -18,7 +18,7 @@ const createTalkingVideo = async (text) => {
       },
       {
         headers: {
-          Authorization: `Basic ${DID_API_KEY}`,
+          Authorization: DID_API_KEY,
           "Content-Type": "application/json",
           Accept: "application/json",
         },
