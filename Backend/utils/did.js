@@ -41,11 +41,12 @@ const getVideoUrl = async (talkId) => {
 
   const poll = async () => {
     try {
+
       const response = await axios.get(
         `https://api.d-id.com/talks/${talkId}`,
         {
           headers: {
-            Authorization: `Basic ${DID_API_KEY}`,
+            Authorization: DID_API_KEY,
             Accept: "application/json",
           },
         }
