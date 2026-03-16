@@ -28,7 +28,7 @@ const InterviewSession = () => {
   const recognitionRef = useRef(null);
 
   const token = localStorage.getItem("token");
-  const API = "http://localhost:8000";
+  const API = import.meta.env.VITE_BACKEND_URL;
 
   useEffect(() => {
     const fetchInterview = async () => {
