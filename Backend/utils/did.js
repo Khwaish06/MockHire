@@ -1,4 +1,3 @@
-
 const axios = require("axios");
 
 const EMAIL_BASE64 = "a2FtYWwuMTk3OW1lZW51QGdtYWlsLmNvbQ";
@@ -31,18 +30,29 @@ const createTalkingVideo = async (text) => {
 };
 
 const getVideoUrl = async (talkId) => {
-  const response = await axios.get(
-    `https://api.d-id.com/talks/${talkId}`,
-    {
-      auth: {
-        username: EMAIL_BASE64,
-        password: API_KEY,
-      },
-    }
-  );
+  while (true) {
+    const response = await axios.get(
+      `https://api.d-id.com/talks/${talkId}`,
+      {
+        auth: {
+          username: EMAIL_BASE64,
+          password: API_KEY,
+        },
+      }
+    );
 
-  return response.data.result_url;
+    const data = response.data;
+
+    if (data.status === "done") {
+      return data.result_url;
+    }
+
+    if (data.status === "error") {
+      throw new Error("D-ID video generation failed");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+  }
 };
 
 module.exports = { createTalkingVideo, getVideoUrl };
-
