@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef, Suspense } from "react";
 import { useParams } from "react-router-dom";
 import Webcam from "react-webcam";
@@ -29,8 +30,9 @@ const InterviewSession = () => {
     const fetchInterview = async () => {
       try {
         const res = await axios.get(`${API}/api/interview/${interviewId}`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` }
         });
+
         setInterview(res.data);
       } catch (err) {
         console.error(err);
@@ -38,8 +40,10 @@ const InterviewSession = () => {
       }
     };
 
-    fetchInterview();
-  }, [interviewId]);
+    if (API && token) {
+      fetchInterview();
+    }
+  }, [interviewId, API, token]);
 
   useEffect(() => {
     if (!interview) return;
@@ -55,8 +59,10 @@ const InterviewSession = () => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition)
-      return alert("Browser doesn't support speech recognition");
+    if (!SpeechRecognition) {
+      alert("Browser doesn't support speech recognition");
+      return;
+    }
 
     const recognition = new SpeechRecognition();
 
@@ -70,6 +76,7 @@ const InterviewSession = () => {
     };
 
     recognition.onerror = (e) => console.error(e);
+
     recognition.onend = () => setIsRecording(false);
 
     recognitionRef.current = recognition;
@@ -84,6 +91,7 @@ const InterviewSession = () => {
 
   const submitAnswer = async (answer, isCoding) => {
     const question = interview?.questions?.[questionIndex]?.question;
+
     if (!question || !answer) {
       alert("Please answer the question first.");
       return;
@@ -96,10 +104,10 @@ const InterviewSession = () => {
           question,
           answer,
           codeOutput: isCoding ? output : "",
-          isCoding,
+          isCoding
         },
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: `Bearer ${token}` }
         }
       );
 
@@ -115,19 +123,25 @@ const InterviewSession = () => {
       javascript: 63,
       python: 71,
       cpp: 54,
-      java: 62,
+      java: 62
     };
+
     return map[lang];
   };
 
   const runCode = async () => {
+    if (!code.trim()) {
+      alert("Please write some code first.");
+      return;
+    }
+
     try {
       const response = await axios.post(
         "https://ce.judge0.com/submissions?base64_encoded=true&wait=true",
         {
           language_id: getLanguageId(language),
           source_code: btoa(code),
-          stdin: "",
+          stdin: ""
         }
       );
 
@@ -139,17 +153,22 @@ const InterviewSession = () => {
         setOutput(atob(result.stderr));
       } else if (result.compile_output) {
         setOutput(atob(result.compile_output));
+      } else if (result.status) {
+        setOutput(result.status.description);
       } else {
-        setOutput(result.status?.description || "No output");
+        setOutput("No output returned.");
       }
     } catch (err) {
       console.error("Judge0 Error:", err);
-      setOutput("❌ Submission failed.");
+      setOutput("❌ Code execution failed.");
     }
   };
 
   if (error) return <div className="error-box">{error}</div>;
-  if (!interview?.questions?.length) return <div>⏳ Loading interview...</div>;
+
+  if (!interview?.questions?.length) {
+    return <div>⏳ Loading interview...</div>;
+  }
 
   const current = interview.questions[questionIndex];
   const videoUrl = current.videoUrl;
@@ -169,7 +188,8 @@ const InterviewSession = () => {
         <p>{currentQuestion}</p>
 
         <p className="timer">
-          ⏱️ {Math.floor(timer / 60)}:{String(timer % 60).padStart(2, "0")}
+          ⏱️ {Math.floor(timer / 60)}:
+          {String(timer % 60).padStart(2, "0")}
         </p>
 
         <button
@@ -194,7 +214,7 @@ const InterviewSession = () => {
               const res = await axios.get(
                 `${API}/api/feedback/summary/${interviewId}`,
                 {
-                  headers: { Authorization: `Bearer ${token}` },
+                  headers: { Authorization: `Bearer ${token}` }
                 }
               );
 
@@ -280,3 +300,4 @@ const InterviewSession = () => {
 };
 
 export default InterviewSession;
+
