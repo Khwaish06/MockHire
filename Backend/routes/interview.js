@@ -28,12 +28,15 @@ router.post(
   authMiddleware,
   upload.single("resume"),
   async (req, res) => {
+
     console.log("📅 [POST] /create hit");
 
     try {
+
       const { role, interviewType, isCustomRole } = req.body;
 
       if (!process.env.OPENROUTER_API_KEY) {
+        console.log("❌ Missing OPENROUTER_API_KEY");
         return res.status(500).json({ message: "Missing OPENROUTER_API_KEY" });
       }
 
@@ -52,17 +55,24 @@ router.post(
           const fileBuffer = fs.readFileSync(resumePath);
           const parsed = await pdfParse(fileBuffer);
           resumeText = parsed.text.slice(0, 1500);
+
           console.log("✅ Resume parsed");
+
         } catch (err) {
+
           console.warn("⚠️ Resume parse failed:", err.message);
+
         } finally {
+
           fs.unlink(resumePath, () => {});
+
         }
       }
 
       let prompt = "";
 
       if (interviewType.toLowerCase() === "coding") {
+
         prompt = `
 You are an AI coding interviewer.
 
@@ -77,7 +87,9 @@ ${resumeText ? `Candidate Resume:\n${resumeText}` : ""}
 
 Return ONLY the problem statement.
 `;
+
       } else {
+
         prompt = `
 You are an AI interviewer.
 
@@ -87,7 +99,13 @@ ${resumeText ? `Candidate Resume:\n${resumeText}` : ""}
 The question should be realistic and answerable within 5 minutes.
 Return ONLY the question text.
 `;
+
       }
+
+
+      // ==========================
+      // Generate question
+      // ==========================
 
       const aiRes = await axios.post(
         OPENROUTER_URL,
@@ -102,8 +120,29 @@ Return ONLY the question text.
         aiRes.data?.choices?.[0]?.message?.content?.trim() ||
         "No question generated.";
 
-      const videoId = await createTalkingVideo(question);
-      const videoUrl = await getVideoUrl(videoId);
+
+      // ==========================
+      // Generate avatar video (SAFE)
+      // ==========================
+
+      let videoUrl = "";
+
+      try {
+
+        const videoId = await createTalkingVideo(question);
+        videoUrl = await getVideoUrl(videoId);
+
+      } catch (videoErr) {
+
+        console.log("⚠️ D-ID video failed, continuing without avatar");
+        console.log(videoErr.response?.data || videoErr.message);
+
+      }
+
+
+      // ==========================
+      // Save interview
+      // ==========================
 
       const interview = new Interview({
         userId: req.user.id,
@@ -123,23 +162,30 @@ Return ONLY the question text.
 
       await interview.save();
 
+
       res.status(201).json({
         message: "Interview created successfully",
         interview,
         question,
         videoUrl
       });
+
     } catch (err) {
-      console.error(
-        "❌ Interview creation error:",
-        err.response?.data || err.message
-      );
+
+      console.error("❌ Interview creation error FULL:", err);
+
+      if (err.response) {
+        console.error("❌ API response:", err.response.data);
+        console.error("❌ Status:", err.response.status);
+      }
 
       res.status(500).json({
         message: "Server error",
         error: err.message
       });
+
     }
+
   }
 );
 
@@ -148,7 +194,9 @@ Return ONLY the question text.
 // GET CURRENT QUESTION
 // ==========================
 router.get("/generate/:id", authMiddleware, async (req, res) => {
+
   try {
+
     const interview = await Interview.findById(req.params.id);
 
     if (!interview) {
@@ -161,10 +209,14 @@ router.get("/generate/:id", authMiddleware, async (req, res) => {
       question: current.question,
       videoUrl: current.videoUrl
     });
+
   } catch (err) {
+
     console.error("Fetch question error:", err.message);
     res.status(500).json({ message: "Server error" });
+
   }
+
 });
 
 
@@ -172,22 +224,24 @@ router.get("/generate/:id", authMiddleware, async (req, res) => {
 // NEXT QUESTION
 // ==========================
 router.post("/next/:id", authMiddleware, async (req, res) => {
+
   try {
+
     const interview = await Interview.findById(req.params.id);
 
     if (!interview)
       return res.status(404).json({ message: "Interview not found" });
 
-    const { role } = interview;
 
     const previousQuestions = interview.questions
       .map((q, i) => `${i + 1}. ${q.question}`)
       .join("\n");
 
+
     const prompt = `
 You are an AI interviewer.
 
-Generate a NEW question for role ${role}.
+Generate a NEW question.
 Do NOT repeat previous questions.
 
 Previous questions:
@@ -195,6 +249,7 @@ ${previousQuestions}
 
 Return ONLY the question.
 `;
+
 
     const aiRes = await axios.post(
       OPENROUTER_URL,
@@ -209,8 +264,20 @@ Return ONLY the question.
       aiRes.data?.choices?.[0]?.message?.content?.trim() ||
       "No question generated.";
 
-    const videoId = await createTalkingVideo(newQuestionText);
-    const videoUrl = await getVideoUrl(videoId);
+
+    let videoUrl = "";
+
+    try {
+
+      const videoId = await createTalkingVideo(newQuestionText);
+      videoUrl = await getVideoUrl(videoId);
+
+    } catch (videoErr) {
+
+      console.log("⚠️ D-ID video failed for next question");
+
+    }
+
 
     const newQuestion = {
       question: newQuestionText,
@@ -220,22 +287,27 @@ Return ONLY the question.
       videoUrl
     };
 
-    interview.questions.push(newQuestion);
 
+    interview.questions.push(newQuestion);
     await interview.save();
+
 
     res.json({
       message: "New question generated",
       question: newQuestionText,
       videoUrl
     });
+
   } catch (err) {
+
     console.error("Next question error:", err.response?.data || err.message);
 
     res
       .status(500)
       .json({ message: "Server error while generating next question" });
+
   }
+
 });
 
 
@@ -243,7 +315,9 @@ Return ONLY the question.
 // GET FULL INTERVIEW
 // ==========================
 router.get("/:id", async (req, res) => {
+
   try {
+
     const interview = await Interview.findById(req.params.id);
 
     if (!interview) {
@@ -251,10 +325,14 @@ router.get("/:id", async (req, res) => {
     }
 
     res.json(interview);
+
   } catch (err) {
+
     console.error("Interview fetch error:", err.message);
     res.status(500).json({ error: "Server error" });
+
   }
+
 });
 
 module.exports = router;
